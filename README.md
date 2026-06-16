@@ -1,4 +1,4 @@
-# Teachable Drones
+# 𖥂 Teachable Drones
 
 Control a **DJI Tello drone** with hand gestures — no controller required. GestureFly lets you record your own custom gestures, train a local machine learning model, and fly in real time. An optional AI scene analysis feature uses a locally-running **Ollama** vision model to describe what the drone sees.
 
