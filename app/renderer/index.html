@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self' http://127.0.0.1:5000; connect-src 'self' http://127.0.0.1:5000 http://localhost:11434; img-src 'self' http://127.0.0.1:5000 data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GestureFly 4.0</title>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ── Top bar ─────────────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar-left">
+    <span class="logo">✈ GestureFly <span class="ver">4.0</span></span>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-tab="collect">① Collect</button>
+    <button class="tab" data-tab="train">② Train</button>
+    <button class="tab" data-tab="deploy">③ Deploy</button>
+  </nav>
+  <div class="topbar-right">
+    <span id="model-status" class="badge badge-err">◉ Model Not Ready</span>
+    <span id="server-status" class="badge badge-ok">● Server OK</span>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  TAB 1 – COLLECT                                                      -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="tab-collect" class="tab-content active">
+  <div class="two-col">
+
+    <!-- Left: webcam -->
+    <div class="card camera-card">
+      <div class="card-title">Webcam</div>
+      <div class="cam-wrap">
+        <img id="webcam-feed" src="http://127.0.0.1:5000/webcam" alt="webcam"/>
+        <div id="hand-badge" class="hand-badge hidden">✋ Hand detected</div>
+      </div>
+      <div class="cam-hints">
+        Hold your gesture pose, select a class below, press <kbd>Space</kbd> or click Capture.
+      </div>
+    </div>
+
+    <!-- Right: controls -->
+    <div class="right-panel">
+
+      <!-- Class selector -->
+      <div class="card">
+        <div class="card-title">Gesture Class</div>
+        <div class="class-grid" id="class-grid">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- Capture controls -->
+      <div class="card">
+        <div class="card-title">Capture</div>
+        <div class="capture-row">
+          <div class="target-wrap">
+            <label>Target samples</label>
+            <input id="target-count" type="number" value="50" min="10" max="500" step="10"/>
+          </div>
+          <button id="btn-capture" class="btn btn-primary" disabled>
+            ▶ Capture  <kbd>Space</kbd>
+          </button>
+          <button id="btn-clear" class="btn btn-danger">🗑 Clear all</button>
+        </div>
+        <div id="capture-status" class="capture-status"></div>
+      </div>
+
+      <!-- Per-class counts -->
+      <div class="card">
+        <div class="card-title">Sample Counts</div>
+        <div id="counts-grid" class="counts-grid">
+          <!-- filled by JS -->
+        </div>
+        <div id="total-samples" class="total-samples">Total: 0</div>
+      </div>
+
+      <button id="btn-goto-train" class="btn btn-accent full-width">
+        Ready? → Go to Train ②
+      </button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  TAB 2 – TRAIN                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="tab-train" class="tab-content">
+  <div class="two-col">
+
+    <!-- Left: classifiers info -->
+    <div class="card">
+      <div class="card-title">Classifiers to train</div>
+      <div class="clf-list">
+        <div class="clf-item"><span class="clf-badge">LR</span> Logistic Regression</div>
+        <div class="clf-item"><span class="clf-badge">KNN</span> K-Nearest Neighbours</div>
+        <div class="clf-item"><span class="clf-badge">SVM</span> Support Vector Machine (RBF)</div>
+        <div class="clf-item"><span class="clf-badge">RF</span> Random Forest (300 trees)</div>
+        <div class="clf-item"><span class="clf-badge">XGB</span> XGBoost</div>
+        <div class="clf-item"><span class="clf-badge">ANN</span> Neural Net · 6 hidden layers</div>
+      </div>
+      <div class="train-meta" id="train-meta">Loading sample info…</div>
+      <button id="btn-train" class="btn btn-primary full-width">
+        🚀 Train All Models
+      </button>
+    </div>
+
+    <!-- Right: live log + results -->
+    <div class="card log-card">
+      <div class="card-title">Training Log</div>
+      <div id="train-log" class="train-log">Waiting…</div>
+
+      <div id="results-table-wrap" class="hidden">
+        <div class="card-title" style="margin-top:16px">Results</div>
+        <table id="results-table" class="results-table">
+          <thead><tr><th>Model</th><th>CV Accuracy</th><th>± Std</th><th>Bar</th></tr></thead>
+          <tbody id="results-tbody"></tbody>
+        </table>
+        <div id="best-model-banner" class="best-model-banner"></div>
+        <button id="btn-goto-deploy" class="btn btn-accent full-width" style="margin-top:12px">
+          Ready? → Go to Deploy ③
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!--  TAB 3 – DEPLOY                                                       -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="tab-deploy" class="tab-content">
+  <div class="three-col">
+
+    <!-- Col 1: Tello connection -->
+    <div class="card">
+      <div class="card-title">Tello Drone</div>
+      <p class="hint">Connect your PC to the Tello WiFi, then click Connect.</p>
+      <div class="drone-status-row">
+        <span id="drone-dot" class="drone-dot off"></span>
+        <span id="drone-label">Disconnected</span>
+        <span id="drone-battery" class="battery"></span>
+      </div>
+      <div class="btn-row">
+        <button id="btn-connect" class="btn btn-primary">🔗 Connect</button>
+        <button id="btn-disconnect" class="btn btn-danger" disabled>✖ Disconnect</button>
+      </div>
+      <div class="card-title" style="margin-top:20px">Tello Feed</div>
+      <div class="cam-wrap small">
+        <img id="tello-feed" src="" alt="Connect drone first" class="tello-placeholder"/>
+      </div>
+      <button id="btn-ai-capture" class="btn btn-accent full-width" style="margin-top:10px">
+        🔍 Analyze Scene (AI)
+      </button>
+      <div id="ai-result-panel" class="ai-result-panel hidden">
+        <div class="card-title" style="margin-top:12px;color:var(--accent2)">🤖 AI Sees…</div>
+        <div id="ai-result-text" class="ai-result-text"></div>
+      </div>
+    </div>
+
+    <!-- Col 2: Live gesture inference -->
+    <div class="card">
+      <div class="card-title">Live Gesture Recognition</div>
+      <div class="cam-wrap">
+        <img id="deploy-webcam" src="http://127.0.0.1:5000/webcam" alt="webcam"/>
+      </div>
+      <div id="inference-panel" class="inference-panel">
+        <!-- rows filled by JS -->
+      </div>
+    </div>
+
+    <!-- Col 3: Command log + manual controls -->
+    <div class="card">
+      <div class="card-title">Drone Commands</div>
+
+      <div class="auto-row">
+        <label class="switch-label">
+          <input type="checkbox" id="auto-fly-toggle"/>
+          <span class="switch"></span>
+          Auto-fly (gesture → drone)
+        </label>
+      </div>
+
+      <div class="card-title" style="margin-top:14px">Manual Override</div>
+      <div class="manual-grid">
+        <button class="btn btn-drone" data-cmd="TAKEOFF">🛫 Takeoff</button>
+        <button class="btn btn-drone" data-cmd="LAND">🛬 Land</button>
+        <button class="btn btn-drone" data-cmd="UP">⬆ Up</button>
+        <button class="btn btn-drone" data-cmd="DOWN">⬇ Down</button>
+        <button class="btn btn-drone" data-cmd="LEFT">⬅ Left</button>
+        <button class="btn btn-drone" data-cmd="RIGHT">➡ Right</button>
+        <button class="btn btn-drone" data-cmd="FORWARD">🔼 Forward</button>
+        <button class="btn btn-drone" data-cmd="BACKWARD">🔽 Backward</button>
+        <button class="btn btn-drone" data-cmd="CLOCKWISE_90">↻ CW 90°</button>
+        <button class="btn btn-drone" data-cmd="ANTICLOCKWISE_90">↺ CCW 90°</button>
+      </div>
+
+      <div class="card-title" style="margin-top:14px">Command Log</div>
+      <div id="cmd-log" class="cmd-log"></div>
+    </div>
+
+  </div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
