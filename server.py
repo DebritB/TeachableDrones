@@ -388,6 +388,19 @@ def tello_connect():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+@app.get("/tello/battery")
+def tello_battery():
+    """Get current drone battery level (or -1 if not connected)."""
+    global _tello
+    if _tello is None:
+        return jsonify({"ok": False, "battery": -1, "error": "Not connected"}), 400
+    try:
+        battery = _tello.get_battery()
+        return jsonify({"ok": True, "battery": battery})
+    except Exception as e:
+        return jsonify({"ok": False, "battery": -1, "error": str(e)}), 500
+
+
 @app.get("/tello/stream")
 def tello_stream():
     def src():

@@ -29,6 +29,7 @@ let cmdCooldown    = false;
 let lastSentCmd    = null;
 let pendingCmd     = null;   // gesture waiting for 2-s stabilisation
 let pendingCmdTimer = null;  // setTimeout handle
+let batteryPollInterval = null;  // setInterval handle for battery polling
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -355,6 +356,28 @@ function startPredictStream() {
 }
 
 // ── Deploy – Tello ─────────────────────────────────────────────────────────
+
+// Start polling battery level while drone is connected
+function startBatteryPoll() {
+  if (batteryPollInterval) clearInterval(batteryPollInterval);
+  batteryPollInterval = setInterval(async () => {
+    if (!droneConnected) {
+      if (batteryPollInterval) clearInterval(batteryPollInterval);
+      batteryPollInterval = null;
+      return;
+    }
+    try {
+      const res  = await fetch(`${API}/tello/battery`);
+      const data = await res.json();
+      if (data.ok && data.battery >= 0) {
+        $('drone-battery').textContent = `🔋 ${data.battery}%`;
+      }
+    } catch (_) {
+      // Silently ignore errors during polling
+    }
+  }, 2000); // Poll every 2 seconds
+}
+
 $('btn-connect').addEventListener('click', async () => {
   logCmd('Connecting to Tello…', 'info');
   $('btn-connect').disabled = true;
@@ -370,6 +393,7 @@ $('btn-connect').addEventListener('click', async () => {
       $('tello-feed').src = `${API}/tello/stream`;
       $('tello-feed').classList.remove('tello-placeholder');
       logCmd(`Connected — battery ${data.battery}%`, 'ok');
+      startBatteryPoll();  // Start polling battery level
     } else {
       logCmd(`Connect failed: ${data.error}`, 'err');
       $('btn-connect').disabled = false;
@@ -383,6 +407,8 @@ $('btn-connect').addEventListener('click', async () => {
 $('btn-disconnect').addEventListener('click', async () => {
   await fetch(`${API}/tello/disconnect`, { method: 'POST' });
   droneConnected = false;
+  if (batteryPollInterval) clearInterval(batteryPollInterval);
+  batteryPollInterval = null;
   $('drone-dot').className   = 'drone-dot off';
   $('drone-label').textContent = 'Disconnected';
   $('drone-battery').textContent = '';
@@ -456,12 +482,28 @@ $('btn-ai-capture').addEventListener('click', async () => {
 
     // 5. Speak it
     if ('speechSynthesis' in window) {
+      // Reset speech synthesis state
       window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(description);
-      utter.rate   = 1.0;
-      utter.pitch  = 1.0;
-      utter.volume = 1.0;
-      window.speechSynthesis.speak(utter);
+      
+      // Small delay to ensure state reset
+      setTimeout(() => {
+        // Ensure not paused
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+        
+        const utter = new SpeechSynthesisUtterance(description);
+        utter.rate   = 1.0;
+        utter.pitch  = 1.0;
+        utter.volume = 1.0;
+        
+        // Handle potential errors
+        utter.onerror = (event) => {
+          logCmd(`Voice error: ${event.error}`, 'warn');
+        };
+        
+        window.speechSynthesis.speak(utter);
+      }, 100);
     }
 
   } catch (e) {
