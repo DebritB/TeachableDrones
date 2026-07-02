@@ -9,7 +9,9 @@ let pythonProcess;
 
 function startPythonServer() {
   const root    = path.join(__dirname, '..', '..');
-  const venvPy  = path.join(root, 'venv', 'Scripts', 'python.exe');
+  const venvPy  = process.platform === 'win32'
+    ? path.join(root, 'venv', 'Scripts', 'python.exe')
+    : path.join(root, 'venv', 'bin', 'python');
   const server  = path.join(root, 'server.py');
 
   pythonProcess = spawn(venvPy, [server], {

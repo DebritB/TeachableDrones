@@ -40,7 +40,7 @@ from flask_cors import CORS
 ROOT       = Path(__file__).parent
 CSV_FILE   = ROOT / "gesture_data.csv"
 MODEL_DIR  = ROOT / "models"
-VENV_PY    = ROOT / "venv" / "Scripts" / "python.exe"
+VENV_PY    = ROOT / "venv" / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
 
 sys.path.insert(0, str(ROOT))
 from gesture_recognition.vector_extractor import HandVectorExtractor
