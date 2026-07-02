@@ -5,10 +5,6 @@
 </p>
 
 
-<p align="center">
-  <img src="logo.png" alt="Teachable Drone Logo" width="400"/>
-</p>
-
 # 𖥂 Teachable Drones
 
 Control a **DJI Tello drone** with hand gestures — no controller required. GestureFly lets you record your own custom gestures, train a local machine learning model, and fly in real time. An optional AI scene analysis feature uses a locally-running **Ollama** vision model to describe what the drone sees.
@@ -105,11 +101,21 @@ cd ..
 
 ### 4. Ollama (AI scene analysis)
 
-Install Ollama from [ollama.com](https://ollama.com), then pull a vision model:
+If Ollama is not installed, download it from [ollama.com](https://ollama.com).
+
+Once Ollama is installed, check if `llava` is already available:
+
+```bash
+ollama list
+```
+
+If `llava` is not in the list, pull it:
 
 ```bash
 ollama pull llava
 ```
+
+> **Mac users:** Make sure the Ollama app is running (check the menu bar icon) before starting the server. You can also verify it's active by running `ollama list` in the terminal — if it returns results, Ollama is ready.
 
 ### 5. Environment configuration
 
