@@ -208,7 +208,8 @@ def main():
 
     models, le = load_models()
 
-    cap = cv2.VideoCapture(args.camera)
+    backend = cv2.CAP_AVFOUNDATION if sys.platform == "darwin" else cv2.CAP_ANY
+    cap = cv2.VideoCapture(args.camera, backend)
     if not cap.isOpened():
         sys.exit(f"[ERROR] Cannot open camera {args.camera}")
 

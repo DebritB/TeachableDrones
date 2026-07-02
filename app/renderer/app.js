@@ -560,7 +560,7 @@ function setModelBadge(state) {
     mel.className   = 'badge badge-ok';
   } else {
     mel.textContent = '◉ Not Trained';
-    mel.className   = 'badge badge-idle';
+    mel.className   = 'badge badge-err';
   }
 }
 
@@ -585,6 +585,60 @@ async function checkServer() {
   }
 }
 setInterval(checkServer, 5000);
+
+// ── macOS camera capture (getUserMedia → POST /frame) ─────────────────────
+// On macOS, Python cannot open the camera directly (TCC permission blocks
+// subprocess camera access). Instead the renderer captures frames and pushes
+// them to the Python server via POST /frame.
+async function startRendererCamera() {
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  } catch (e) {
+    console.warn('[camera] getUserMedia failed:', e);
+    return;
+  }
+
+  const video  = document.createElement('video');
+  video.srcObject = stream;
+  video.playsInline = true;
+  await video.play();
+
+  const canvas = document.createElement('canvas');
+  const ctx    = canvas.getContext('2d');
+  let   busy   = false;
+
+  async function sendFrame() {
+    if (!busy && video.readyState >= 2) {
+      busy = true;
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      // Mirror the frame to match cv2.flip(frame, 1) on non-macOS
+      ctx.save();
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0);
+      ctx.restore();
+      canvas.toBlob(async blob => {
+        try {
+          await fetch(`${API}/frame`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'image/jpeg' },
+            body:    blob,
+          });
+        } catch (_) {}
+        busy = false;
+      }, 'image/jpeg', 0.75);
+    }
+    setTimeout(sendFrame, 40); // ~25 fps
+  }
+  sendFrame();
+}
+
+// Only activate renderer-side camera on macOS
+if (window.gestureFly?.platform === 'darwin') {
+  startRendererCamera();
+}
 
 // ── Init ───────────────────────────────────────────────────────────────────
 buildClassGrid();

@@ -120,7 +120,10 @@ def _frame_loop():
         time.sleep(0.01)
 
 
-threading.Thread(target=_frame_loop, daemon=True).start()
+# On macOS, cv2.VideoCapture is blocked by TCC permissions when running as a
+# Python subprocess. Frames are pushed by the Electron renderer via POST /frame.
+if sys.platform != "darwin":
+    threading.Thread(target=_frame_loop, daemon=True).start()
 _load_models()
 
 
@@ -155,6 +158,24 @@ def status():
         "model_ready": len(_models) > 0,
         "classes": GESTURE_CLASSES,
     })
+
+
+@app.post("/frame")
+def receive_frame():
+    """Accept a raw JPEG frame from the Electron renderer (macOS path).
+    Processes it through the hand extractor and stores the result."""
+    data = request.get_data()
+    arr  = np.frombuffer(data, dtype=np.uint8)
+    frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    if frame is None:
+        return jsonify({"ok": False, "error": "bad frame"}), 400
+    ext = _get_extractor()
+    vector, annotated = ext.extract(frame)
+    with _lock:
+        global _last_frame, _last_vector
+        _last_frame  = annotated
+        _last_vector = vector
+    return jsonify({"ok": True})
 
 
 @app.get("/webcam")
