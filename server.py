@@ -2,7 +2,7 @@
 server.py
 ---------
 GestureFly 4.0 – Offline Python bridge server (Flask)
-Runs on localhost:5000. All ML and drone logic lives here.
+Runs on localhost:5001. All ML and drone logic lives here.
 
 Endpoints:
   GET  /status                    → server health
@@ -498,5 +498,5 @@ def tello_disconnect():
 # ── Entry point ────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print("GestureFly 4.0 – Bridge Server running on http://localhost:5000")
-    app.run(host="127.0.0.1", port=5000, threaded=True, debug=False)
+    print("GestureFly 4.0 – Bridge Server running on http://localhost:5001")
+    app.run(host="127.0.0.1", port=5001, threaded=True, debug=False)

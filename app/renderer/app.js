@@ -1,6 +1,6 @@
 /* app.js – GestureFly 4.0 renderer logic */
 
-const API = 'http://127.0.0.1:5000';
+const API = 'http://127.0.0.1:5001';
 
 const GESTURE_CLASSES = [
   'TAKEOFF', 'LAND', 'UP', 'DOWN',

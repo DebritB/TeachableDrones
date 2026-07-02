@@ -71,7 +71,7 @@ async function createWindow() {
     icon: path.join(__dirname, '..', 'renderer', 'assets', 'icon.png'),
   });
 
-  const ready = await waitForServer('http://127.0.0.1:5000/status');
+  const ready = await waitForServer('http://127.0.0.1:5001/status');
   if (!ready) {
     mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'error.html'));
     return;

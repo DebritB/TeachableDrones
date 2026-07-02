@@ -16,8 +16,8 @@ dist/
 build/
 *.spec
 
-# Trained models (large binary files)
-models/*.pkl
+# Trained models — committed so Mac/Linux clones work without retraining
+# models/*.pkl
 
 # Collected data
 gesture_data.csv
