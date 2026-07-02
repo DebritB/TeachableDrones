@@ -1,12 +1,9 @@
 <p align="center">
   <strong>Developed by:</strong> Mr. Debrit Bhattacharyya<br/>
   <strong>Supervisor:</strong> Dr. Nabin Sharma<br/>
-  <strong>Intelligent Drone Lab</strong>
+  <strong>UTS Intelligent Drone Lab, Sydney, Australia</strong>
 </p>
 
-<p align="center">
-  <img src="uts_logo.png" alt="UTS Logo" width="300"/>
-</p>
 
 <p align="center">
   <img src="logo.png" alt="Teachable Drone Logo" width="400"/>
