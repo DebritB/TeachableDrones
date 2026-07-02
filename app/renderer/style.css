@@ -144,6 +144,11 @@ body::after {
   border: 1px solid rgba(255, 76, 106, 0.35);
   box-shadow: 0 0 10px rgba(255, 76, 106, 0.2);
 }
+.badge-idle {
+  background: rgba(160, 160, 180, 0.10);
+  color: #a0a0b4;
+  border: 1px solid rgba(160, 160, 180, 0.25);
+}
 .badge-training {
   background: rgba(245, 200, 66, 0.12);
   color: var(--yellow);

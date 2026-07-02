@@ -560,7 +560,7 @@ function setModelBadge(state) {
     mel.className   = 'badge badge-ok';
   } else {
     mel.textContent = '◉ Not Trained';
-    mel.className   = 'badge badge-err';
+    mel.className   = 'badge badge-idle';
   }
 }
 
