@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, session } = require('electron');
 const path  = require('path');
 const { spawn } = require('child_process');
 
@@ -84,7 +84,18 @@ async function createWindow() {
 
 // ── App lifecycle ──────────────────────────────────────────────────────────
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  // Grant camera permission on macOS (required for Python subprocess via OpenCV)
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    if (permission === 'media') return callback(true);
+    callback(false);
+  });
+  session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
+    if (permission === 'media') return true;
+    return false;
+  });
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   stopPythonServer();

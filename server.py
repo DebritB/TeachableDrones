@@ -73,7 +73,9 @@ _last_vector   = None          # latest 63-D vector
 def _get_webcam():
     global _webcam_cap
     if _webcam_cap is None or not _webcam_cap.isOpened():
-        _webcam_cap = cv2.VideoCapture(0)
+        # Use AVFoundation backend on macOS for reliable camera access
+        backend = cv2.CAP_AVFOUNDATION if sys.platform == "darwin" else cv2.CAP_ANY
+        _webcam_cap = cv2.VideoCapture(0, backend)
     return _webcam_cap
 
 
